@@ -105,7 +105,7 @@
             gap: 1rem;
         }
 
-        input {
+        select, input {
             flex: 1;
             background-color: var(--bg);
             border: 2px solid var(--border);
@@ -118,7 +118,18 @@
             font-family: monospace;
         }
 
-        input:focus {
+        select {
+            font-family: 'Inter', system-ui, sans-serif;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f8fafc' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 1em;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        select:focus, input:focus {
             border-color: var(--primary);
             box-shadow: 0 0 0 4px rgba(247, 147, 26, 0.1);
         }
@@ -270,7 +281,15 @@
                 <p class="subtitle">Generate beautiful, embeddable donation widgets for your website and GitHub.</p>
 
                 <div class="input-group">
-                    <label for="btc-address">Your Bitcoin Wallet Address</label>
+                    <label for="network-type">Network / Address Type</label>
+                    <select id="network-type" onchange="updatePlaceholder()">
+                        <option value="onchain">Standard Bitcoin (On-chain)</option>
+                        <option value="lightning">Lightning Network</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label for="btc-address" id="address-label">Your Bitcoin Wallet Address</label>
                     <div class="input-wrapper">
                         <input type="text" id="btc-address" placeholder="e.g. bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh" autocomplete="off">
                         <button class="generate-btn" onclick="generateWidgets()">
@@ -323,6 +342,11 @@
                         </div>
                     </div>
 
+                    <button class="generate-btn" style="margin-top: 2rem; background: transparent; border: 2px solid var(--border); color: var(--text); box-shadow: none; width: 100%; display: flex; justify-content: center; align-items: center;" onclick="resetForm()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;"><path d="m15 18-6-6 6-6"/></svg>
+                        Generate Another
+                    </button>
+
                 </div>
             </div>
         </div>
@@ -330,14 +354,27 @@
 
     <!-- The actual widget code that will be injected into the textarea and preview -->
     <script>
-        function generateWidgetCode(address) {
-            // Escape the address to prevent XSS issues in generation (though it's just a bitcoin address)
+        function generateWidgetCode(address, type) {
+            // Escape the address to prevent XSS issues in generation
             const safeAddr = address.replace(/</g, "&lt;").replace(/>/g, "&gt;");
             
-            return `<!-- Tip Me in Bitcoin Widget -->
+            const isLightning = type === 'lightning';
+            const protocol = isLightning ? 'lightning' : 'bitcoin';
+            const buttonText = isLightning ? 'Tip via Lightning' : 'Tip Me in Bitcoin';
+            const buttonIcon = isLightning 
+                ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>'
+                : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m13 2-2 2.5h3L12 7"/><path d="M11.767 19.089c4.924.868 6.14-6.025 1.216-6.894m-1.216 6.894L5.86 18.047m5.908 1.042-.347 1.97m1.563-8.864c4.924.869 6.14-6.025 1.215-6.893m-1.215 6.893-3.94-.694m5.155-6.2L8.29 4.26m5.908 1.042.348-1.97M7.48 20.364l3.126-17.727"/></svg>';
+            const titleText = isLightning ? 'Lightning Tip' : 'Support my work';
+            const subtitleText = isLightning ? 'Scan to send via Lightning' : 'Scan to send Bitcoin';
+            const primaryColor = isLightning ? '#792EE5' : '#F7931A';
+            const gradientColors = isLightning ? '#792EE5, #9d4edd' : '#F7931A, #e08316';
+            const shadowColor = isLightning ? 'rgba(121, 46, 229, 0.3)' : 'rgba(247, 147, 26, 0.3)';
+            const shadowHoverColor = isLightning ? 'rgba(121, 46, 229, 0.4)' : 'rgba(247, 147, 26, 0.4)';
+
+            return `<!-- Tip Widget -->
 <style>
   .btc-tip-btn {
-    background: linear-gradient(135deg, #F7931A, #e08316);
+    background: linear-gradient(135deg, ${gradientColors});
     color: white;
     padding: 12px 24px;
     border-radius: 12px;
@@ -350,11 +387,11 @@
     gap: 10px;
     font-family: 'Inter', system-ui, sans-serif;
     transition: transform 0.2s, box-shadow 0.2s;
-    box-shadow: 0 4px 12px rgba(247, 147, 26, 0.3);
+    box-shadow: 0 4px 12px ${shadowColor};
   }
   .btc-tip-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(247, 147, 26, 0.4);
+    box-shadow: 0 6px 16px ${shadowHoverColor};
   }
   .btc-modal-overlay {
     display: none;
@@ -406,7 +443,7 @@
   .btc-modal h3 {
     margin: 0 0 8px 0;
     font-size: 1.5rem;
-    color: #F7931A;
+    color: ${primaryColor};
   }
   .btc-modal p {
     color: #94a3b8;
@@ -449,15 +486,15 @@
 </style>
 
 <button class="btc-tip-btn" onclick="openBtcModal()">
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m13 2-2 2.5h3L12 7"/><path d="M11.767 19.089c4.924.868 6.14-6.025 1.216-6.894m-1.216 6.894L5.86 18.047m5.908 1.042-.347 1.97m1.563-8.864c4.924.869 6.14-6.025 1.215-6.893m-1.215 6.893-3.94-.694m5.155-6.2L8.29 4.26m5.908 1.042.348-1.97M7.48 20.364l3.126-17.727"/></svg>
-  Tip Me in Bitcoin
+  ${buttonIcon}
+  ${buttonText}
 </button>
 
 <div id="btc-modal-wrapper" class="btc-modal-overlay" onclick="if(event.target === this) closeBtcModal()">
   <div class="btc-modal">
     <span class="btc-close" onclick="closeBtcModal()">&times;</span>
-    <h3>Support my work</h3>
-    <p>Scan to send Bitcoin</p>
+    <h3>${titleText}</h3>
+    <p>${subtitleText}</p>
     <div id="btc-qr-container"></div>
     <div class="btc-address-box" id="btc-address-text">${safeAddr}</div>
     <button class="btc-copy-btn" id="btc-copy-action" onclick="copyBtcAddress()">Copy Address</button>
@@ -466,7 +503,7 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script>
 <script>
-  let btcQrGenerated = false;
+  var btcQrGenerated = false;
   
   function openBtcModal() {
     const wrapper = document.getElementById('btc-modal-wrapper');
@@ -476,7 +513,7 @@
     
     if (!btcQrGenerated) {
       new QRCode(document.getElementById("btc-qr-container"), {
-        text: "bitcoin:${safeAddr}",
+        text: "${protocol}:${safeAddr}",
         width: 160,
         height: 160,
         colorDark : "#000000",
@@ -506,24 +543,42 @@
     });
   }
 <\/script>
-<!-- End Tip Me in Bitcoin Widget -->`;
+<!-- End Tip Widget -->`;
+        }
+
+        function isValidAddress(address, type) {
+            if (type === 'lightning') {
+                const isEmailLike = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address);
+                const isLnurl = /^(lnurl1|lnbc)[a-z0-9]+$/i.test(address);
+                return isEmailLike || isLnurl;
+            } else {
+                return /^(1[a-km-zA-HJ-NP-Z1-9]{25,34})|(3[a-km-zA-HJ-NP-Z1-9]{25,34})|(bc1[a-zA-HJ-NP-Z0-9]{39,59})$/i.test(address);
+            }
         }
 
         function generateWidgets() {
+            // Cancel any pending reset timeout to prevent race conditions
+            if (window._resetTimeout) {
+                clearTimeout(window._resetTimeout);
+                window._resetTimeout = null;
+            }
+
             const addressInput = document.getElementById('btc-address');
             const address = addressInput.value.trim();
+            const type = document.getElementById('network-type').value;
 
-            if (!address) {
-                alert("Please enter a valid Bitcoin address.");
+            if (!address || !isValidAddress(address, type)) {
+                alert(`Please enter a valid ${type === 'lightning' ? 'Lightning' : 'Bitcoin'} address.`);
                 addressInput.focus();
                 return;
             }
 
             // Save to local storage for convenience next time
             localStorage.setItem('btc-tip-address', address);
+            localStorage.setItem('btc-tip-type', type);
 
             // Generate Widget Code
-            const widgetCode = generateWidgetCode(address);
+            const widgetCode = generateWidgetCode(address, type);
             document.getElementById('widget-code').value = widgetCode;
             
             // Set Preview (we inject the actual widget code so the user can test the real thing right here)
@@ -539,22 +594,38 @@
             document.getElementById('widget-preview').innerHTML = '';
             document.getElementById('widget-preview').appendChild(previewContainer);
             
+            // Clean up previously injected scripts to prevent conflicts
+            document.querySelectorAll('.injected-preview-script').forEach(s => s.remove());
+
             // Execute scripts inside the generated code
             const scripts = previewContainer.getElementsByTagName('script');
             for (let i = 0; i < scripts.length; i++) {
-                const newScript = document.createElement('script');
                 if (scripts[i].src) {
-                    newScript.src = scripts[i].src;
+                    // Only load the external QR library once
+                    if (!document.getElementById('qrcode-lib')) {
+                        const newScript = document.createElement('script');
+                        newScript.id = 'qrcode-lib';
+                        newScript.src = scripts[i].src;
+                        document.body.appendChild(newScript);
+                    }
                 } else {
+                    const newScript = document.createElement('script');
+                    newScript.className = 'injected-preview-script';
                     newScript.innerHTML = scripts[i].innerHTML;
+                    document.body.appendChild(newScript);
                 }
-                document.body.appendChild(newScript);
             }
 
             // Generate Markdown Code
-            const markdownCode = `[![Tip Me in Bitcoin](https://img.shields.io/badge/Tip_Me-Bitcoin-F7931A?style=for-the-badge&logo=bitcoin&logoColor=white)](bitcoin:${address})`;
+            const isLightning = type === 'lightning';
+            const protocol = isLightning ? 'lightning' : 'bitcoin';
+            const badgeLabel = isLightning ? 'Tip_Me-Lightning' : 'Tip_Me-Bitcoin';
+            const badgeLogo = isLightning ? 'lightning' : 'bitcoin';
+            const badgeColor = isLightning ? '792EE5' : 'F7931A';
+            
+            const markdownCode = `[![Tip Me](https://img.shields.io/badge/${badgeLabel}-${badgeColor}?style=for-the-badge&logo=${badgeLogo}&logoColor=white)](${protocol}:${address})`;
             document.getElementById('markdown-code').value = markdownCode;
-            document.getElementById('markdown-preview-img').src = `https://img.shields.io/badge/Tip_Me-Bitcoin-F7931A?style=for-the-badge&logo=bitcoin&logoColor=white`;
+            document.getElementById('markdown-preview-img').src = `https://img.shields.io/badge/${badgeLabel}-${badgeColor}?style=for-the-badge&logo=${badgeLogo}&logoColor=white`;
 
             // Show results
             document.getElementById('results').style.display = 'block';
@@ -583,9 +654,41 @@
             window.getSelection().removeAllRanges();
         }
 
+        function updatePlaceholder() {
+            const type = document.getElementById('network-type').value;
+            const input = document.getElementById('btc-address');
+            const label = document.getElementById('address-label');
+            if (type === 'lightning') {
+                label.innerText = 'Your Lightning Address / LNURL';
+                input.placeholder = 'e.g. satoshi@getalby.com or lnurl1...';
+            } else {
+                label.innerText = 'Your Bitcoin Wallet Address';
+                input.placeholder = 'e.g. bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh';
+            }
+        }
+
+        function resetForm() {
+            // Clear inputs immediately so user can start typing
+            document.getElementById('btc-address').value = '';
+            document.getElementById('btc-address').focus();
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            // Wait for scroll to finish before hiding elements to prevent abrupt jumping
+            if (window._resetTimeout) clearTimeout(window._resetTimeout);
+            window._resetTimeout = setTimeout(() => {
+                document.getElementById('results').style.display = 'none';
+            }, 400);
+        }
+
         // Load saved address on startup
         window.onload = () => {
             const saved = localStorage.getItem('btc-tip-address');
+            const savedType = localStorage.getItem('btc-tip-type');
+            if (savedType) {
+                document.getElementById('network-type').value = savedType;
+                updatePlaceholder();
+            }
             if (saved) {
                 document.getElementById('btc-address').value = saved;
             }
