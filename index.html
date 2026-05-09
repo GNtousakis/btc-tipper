@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bitcoin Tip Widget Generator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f172a;
+            --surface: #1e293b;
+            --primary: #F7931A; /* Bitcoin Orange */
+            --primary-hover: #e08316;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --glow: rgba(247, 147, 26, 0.4);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 2rem 1rem;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+        }
+
+        .card {
+            background-color: var(--surface);
+            border-radius: 20px;
+            padding: 3rem 2rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px var(--glow);
+            border: 1px solid var(--border);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Ambient background glow */
+        .card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(247,147,26,0.05) 0%, rgba(0,0,0,0) 70%);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .content-wrapper {
+            position: relative;
+            z-index: 1;
+        }
+
+        h1 {
+            margin-top: 0;
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #F7931A, #fcd34d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-align: center;
+            margin-bottom: 0.5rem;
+            letter-spacing: -1px;
+        }
+
+        p.subtitle {
+            text-align: center;
+            color: var(--text-muted);
+            margin-bottom: 3rem;
+            font-size: 1.1rem;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 2rem;
+        }
+
+        label {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: 1rem;
+        }
+
+        input {
+            flex: 1;
+            background-color: var(--bg);
+            border: 2px solid var(--border);
+            color: var(--text);
+            padding: 1rem 1.2rem;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            outline: none;
+            font-family: monospace;
+        }
+
+        input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(247, 147, 26, 0.1);
+        }
+
+        button.generate-btn {
+            background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 10px 15px -3px rgba(247, 147, 26, 0.3);
+            white-space: nowrap;
+        }
+
+        button.generate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 20px -3px rgba(247, 147, 26, 0.4);
+        }
+
+        button.generate-btn:active {
+            transform: translateY(1px);
+        }
+
+        .results {
+            display: none;
+            margin-top: 3rem;
+            animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .section {
+            margin-top: 2rem;
+            background: rgba(15, 23, 42, 0.5);
+            padding: 2rem;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            backdrop-filter: blur(10px);
+        }
+
+        .section h2 {
+            margin-top: 0;
+            font-size: 1.4rem;
+            color: var(--text);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section p.desc {
+            color: var(--text-muted);
+            margin-top: 0;
+            margin-bottom: 1.5rem;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .code-block {
+            position: relative;
+        }
+
+        textarea {
+            width: 100%;
+            height: 200px;
+            background-color: #0b1121;
+            color: #a5b4fc;
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            resize: vertical;
+            outline: none;
+        }
+
+        textarea:focus {
+            border-color: var(--primary);
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: var(--surface);
+            color: var(--text);
+            border: 1px solid var(--border);
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .copy-btn:hover {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .preview {
+            margin-top: 1.5rem;
+            padding: 2rem;
+            background: var(--bg);
+            border-radius: 12px;
+            border: 1px dashed var(--border);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* SVG Icons */
+        svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        @media (max-width: 600px) {
+            .input-wrapper {
+                flex-direction: column;
+            }
+            button.generate-btn {
+                width: 100%;
+            }
+            h1 {
+                font-size: 2.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="card">
+            <div class="content-wrapper">
+                <h1>Tip Me in Bitcoin</h1>
+                <p class="subtitle">Generate beautiful, embeddable donation widgets for your website and GitHub.</p>
+
+                <div class="input-group">
+                    <label for="btc-address">Your Bitcoin Wallet Address</label>
+                    <div class="input-wrapper">
+                        <input type="text" id="btc-address" placeholder="e.g. bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh" autocomplete="off">
+                        <button class="generate-btn" onclick="generateWidgets()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 6px;"><path d="m13 2-2 2.5h3L12 7"/><path d="M11.767 19.089c4.924.868 6.14-6.025 1.216-6.894m-1.216 6.894L5.86 18.047m5.908 1.042-.347 1.97m1.563-8.864c4.924.869 6.14-6.025 1.215-6.893m-1.215 6.893-3.94-.694m5.155-6.2L8.29 4.26m5.908 1.042.348-1.97M7.48 20.364l3.126-17.727"/></svg>
+                            Generate
+                        </button>
+                    </div>
+                </div>
+
+                <div class="results" id="results">
+                    <!-- Deliverable 1: Website Widget -->
+                    <div class="section">
+                        <h2>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                            Website Widget
+                        </h2>
+                        <p class="desc">Embed this dynamic HTML/JS snippet on your personal website. It creates a sleek button that opens a QR code modal.</p>
+                        
+                        <div class="code-block">
+                            <textarea id="widget-code" readonly></textarea>
+                            <button class="copy-btn" onclick="copyCode('widget-code', this)">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                                Copy HTML
+                            </button>
+                        </div>
+
+                        <div class="preview" id="widget-preview">
+                            <!-- Preview injected here -->
+                        </div>
+                    </div>
+
+                    <!-- Deliverable 2: Markdown Snippet -->
+                    <div class="section">
+                        <h2>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+                            GitHub / Markdown Badge
+                        </h2>
+                        <p class="desc">Paste this Markdown snippet in your GitHub README or places where JS isn't allowed. It adds a static Shields.io badge.</p>
+                        
+                        <div class="code-block">
+                            <textarea id="markdown-code" style="height: 100px;" readonly></textarea>
+                            <button class="copy-btn" onclick="copyCode('markdown-code', this)">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                                Copy Markdown
+                            </button>
+                        </div>
+                        
+                        <div class="preview" style="background: transparent; border: none; padding: 1rem 0 0 0;">
+                            <img id="markdown-preview-img" src="" alt="Badge Preview" style="border-radius: 4px;">
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- The actual widget code that will be injected into the textarea and preview -->
+    <script>
+        function generateWidgetCode(address) {
+            // Escape the address to prevent XSS issues in generation (though it's just a bitcoin address)
+            const safeAddr = address.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+            
+            return `<!-- Tip Me in Bitcoin Widget -->
+<style>
+  .btc-tip-btn {
+    background: linear-gradient(135deg, #F7931A, #e08316);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 16px;
+    cursor: pointer;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Inter', system-ui, sans-serif;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 4px 12px rgba(247, 147, 26, 0.3);
+  }
+  .btc-tip-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(247, 147, 26, 0.4);
+  }
+  .btc-modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.75);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 999999;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  .btc-modal-overlay.show {
+    opacity: 1;
+  }
+  .btc-modal {
+    background: #1e293b;
+    color: #f8fafc;
+    padding: 32px 24px;
+    border-radius: 20px;
+    text-align: center;
+    font-family: 'Inter', system-ui, sans-serif;
+    width: 90%;
+    max-width: 360px;
+    position: relative;
+    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+    border: 1px solid #334155;
+    transform: translateY(20px);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .btc-modal-overlay.show .btc-modal {
+    transform: translateY(0);
+  }
+  .btc-close {
+    position: absolute;
+    top: 16px; right: 20px;
+    cursor: pointer;
+    font-size: 28px;
+    line-height: 1;
+    color: #94a3b8;
+    transition: color 0.2s;
+  }
+  .btc-close:hover {
+    color: #f8fafc;
+  }
+  .btc-modal h3 {
+    margin: 0 0 8px 0;
+    font-size: 1.5rem;
+    color: #F7931A;
+  }
+  .btc-modal p {
+    color: #94a3b8;
+    margin: 0 0 20px 0;
+    font-size: 0.95rem;
+  }
+  .btc-address-box {
+    background: #0f172a;
+    padding: 14px;
+    border-radius: 10px;
+    font-size: 13px;
+    margin: 20px 0;
+    word-break: break-all;
+    border: 1px solid #334155;
+    color: #e2e8f0;
+    font-family: monospace;
+  }
+  .btc-copy-btn {
+    background: #334155;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+    width: 100%;
+    font-size: 15px;
+  }
+  .btc-copy-btn:hover {
+    background: #475569;
+  }
+  #btc-qr-container {
+    background: white;
+    padding: 16px;
+    border-radius: 12px;
+    display: inline-block;
+    margin: 0 auto;
+  }
+</style>
+
+<button class="btc-tip-btn" onclick="openBtcModal()">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m13 2-2 2.5h3L12 7"/><path d="M11.767 19.089c4.924.868 6.14-6.025 1.216-6.894m-1.216 6.894L5.86 18.047m5.908 1.042-.347 1.97m1.563-8.864c4.924.869 6.14-6.025 1.215-6.893m-1.215 6.893-3.94-.694m5.155-6.2L8.29 4.26m5.908 1.042.348-1.97M7.48 20.364l3.126-17.727"/></svg>
+  Tip Me in Bitcoin
+</button>
+
+<div id="btc-modal-wrapper" class="btc-modal-overlay" onclick="if(event.target === this) closeBtcModal()">
+  <div class="btc-modal">
+    <span class="btc-close" onclick="closeBtcModal()">&times;</span>
+    <h3>Support my work</h3>
+    <p>Scan to send Bitcoin</p>
+    <div id="btc-qr-container"></div>
+    <div class="btc-address-box" id="btc-address-text">${safeAddr}</div>
+    <button class="btc-copy-btn" id="btc-copy-action" onclick="copyBtcAddress()">Copy Address</button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script>
+<script>
+  let btcQrGenerated = false;
+  
+  function openBtcModal() {
+    const wrapper = document.getElementById('btc-modal-wrapper');
+    wrapper.style.display = 'flex';
+    // Small delay to allow display:flex to apply before adding show class for transition
+    setTimeout(() => wrapper.classList.add('show'), 10);
+    
+    if (!btcQrGenerated) {
+      new QRCode(document.getElementById("btc-qr-container"), {
+        text: "bitcoin:${safeAddr}",
+        width: 160,
+        height: 160,
+        colorDark : "#000000",
+        colorLight : "#ffffff",
+        correctLevel : QRCode.CorrectLevel.M
+      });
+      btcQrGenerated = true;
+    }
+  }
+
+  function closeBtcModal() {
+    const wrapper = document.getElementById('btc-modal-wrapper');
+    wrapper.classList.remove('show');
+    setTimeout(() => wrapper.style.display = 'none', 300);
+  }
+
+  function copyBtcAddress() {
+    navigator.clipboard.writeText('${safeAddr}').then(() => {
+      const btn = document.getElementById('btc-copy-action');
+      const originalText = btn.innerText;
+      btn.innerText = 'Copied!';
+      btn.style.background = '#10b981'; // Success green
+      setTimeout(() => {
+        btn.innerText = originalText;
+        btn.style.background = '#334155';
+      }, 2000);
+    });
+  }
+<\/script>
+<!-- End Tip Me in Bitcoin Widget -->`;
+        }
+
+        function generateWidgets() {
+            const addressInput = document.getElementById('btc-address');
+            const address = addressInput.value.trim();
+
+            if (!address) {
+                alert("Please enter a valid Bitcoin address.");
+                addressInput.focus();
+                return;
+            }
+
+            // Save to local storage for convenience next time
+            localStorage.setItem('btc-tip-address', address);
+
+            // Generate Widget Code
+            const widgetCode = generateWidgetCode(address);
+            document.getElementById('widget-code').value = widgetCode;
+            
+            // Set Preview (we inject the actual widget code so the user can test the real thing right here)
+            // We'll wrap it in a div to isolate it slightly, though the styles are global.
+            // First remove any old preview wrappers to avoid duplicate IDs/modals
+            const oldWrapper = document.getElementById('btc-preview-container');
+            if (oldWrapper) oldWrapper.remove();
+            
+            const previewContainer = document.createElement('div');
+            previewContainer.id = 'btc-preview-container';
+            // We use a small trick: execute scripts inside innerHTML by recreating them
+            previewContainer.innerHTML = widgetCode;
+            document.getElementById('widget-preview').innerHTML = '';
+            document.getElementById('widget-preview').appendChild(previewContainer);
+            
+            // Execute scripts inside the generated code
+            const scripts = previewContainer.getElementsByTagName('script');
+            for (let i = 0; i < scripts.length; i++) {
+                const newScript = document.createElement('script');
+                if (scripts[i].src) {
+                    newScript.src = scripts[i].src;
+                } else {
+                    newScript.innerHTML = scripts[i].innerHTML;
+                }
+                document.body.appendChild(newScript);
+            }
+
+            // Generate Markdown Code
+            const markdownCode = `[![Tip Me in Bitcoin](https://img.shields.io/badge/Tip_Me-Bitcoin-F7931A?style=for-the-badge&logo=bitcoin&logoColor=white)](bitcoin:${address})`;
+            document.getElementById('markdown-code').value = markdownCode;
+            document.getElementById('markdown-preview-img').src = `https://img.shields.io/badge/Tip_Me-Bitcoin-F7931A?style=for-the-badge&logo=bitcoin&logoColor=white`;
+
+            // Show results
+            document.getElementById('results').style.display = 'block';
+            
+            // Smooth scroll to results
+            document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function copyCode(elementId, btn) {
+            const el = document.getElementById(elementId);
+            el.select();
+            document.execCommand('copy');
+            
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Copied!`;
+            btn.style.color = "#10b981";
+            btn.style.borderColor = "#10b981";
+            
+            setTimeout(() => {
+                btn.innerHTML = originalHTML;
+                btn.style.color = "";
+                btn.style.borderColor = "";
+            }, 2000);
+            
+            // Clear selection
+            window.getSelection().removeAllRanges();
+        }
+
+        // Load saved address on startup
+        window.onload = () => {
+            const saved = localStorage.getItem('btc-tip-address');
+            if (saved) {
+                document.getElementById('btc-address').value = saved;
+            }
+        };
+    </script>
+</body>
+</html>
