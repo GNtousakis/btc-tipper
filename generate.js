@@ -5,10 +5,11 @@ const fs = require('fs');
 // Get the Bitcoin address from the command line arguments
 const address = process.argv[2];
 const type = process.argv[3] || 'onchain'; // Default to onchain
+const badgeStyle = process.argv[4] || 'for-the-badge'; // Options: for-the-badge, flat, flat-square, plastic
 
 if (!address) {
     console.error("❌ Error: Please provide an address.");
-    console.log("👉 Usage: node generate.js <address> [onchain|lightning]");
+    console.log("👉 Usage: node generate.js <address> [onchain|lightning] [for-the-badge|flat|flat-square|plastic]");
     process.exit(1);
 }
 
@@ -24,7 +25,11 @@ console.log(`Generating snippets for ${isLightning ? 'Lightning' : 'Bitcoin'} Ad
 const badgeLabel = isLightning ? 'Tip_Me-Lightning' : 'Tip_Me-Bitcoin';
 const badgeLogo = isLightning ? 'lightning' : 'bitcoin';
 const badgeColor = isLightning ? '792EE5' : 'F7931A';
-const markdownCode = `[![Tip Me](https://img.shields.io/badge/${badgeLabel}-${badgeColor}?style=for-the-badge&logo=${badgeLogo}&logoColor=white)](${protocol}:${safeAddr})`;
+
+// GitHub blocks raw `bitcoin:` and `lightning:` URIs in markdown links for security.
+// As a fallback, we link the badge to a web-based QR code generator API.
+const qrCodeUrl = `https://quickchart.io/qr?size=500&text=${protocol}:${safeAddr}`;
+const markdownCode = `[![Tip Me](https://img.shields.io/badge/${badgeLabel}-${badgeColor}?style=${badgeStyle}&logo=${badgeLogo}&logoColor=white)](${qrCodeUrl})`;
 
 // 2. Generate HTML Widget Code
 const buttonText = isLightning ? 'Tip via Lightning' : 'Tip Me in Bitcoin';

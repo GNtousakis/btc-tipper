@@ -289,6 +289,16 @@
                 </div>
 
                 <div class="input-group">
+                    <label for="badge-style">Markdown Badge Size</label>
+                    <select id="badge-style">
+                        <option value="for-the-badge">Large (for-the-badge)</option>
+                        <option value="flat">Medium (flat)</option>
+                        <option value="flat-square">Medium Square (flat-square)</option>
+                        <option value="plastic">Small (plastic)</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
                     <label for="btc-address" id="address-label">Your Bitcoin Wallet Address</label>
                     <div class="input-wrapper">
                         <input type="text" id="btc-address" placeholder="e.g. bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh" autocomplete="off">
@@ -566,6 +576,7 @@
             const addressInput = document.getElementById('btc-address');
             const address = addressInput.value.trim();
             const type = document.getElementById('network-type').value;
+            const badgeStyle = document.getElementById('badge-style').value;
 
             if (!address || !isValidAddress(address, type)) {
                 alert(`Please enter a valid ${type === 'lightning' ? 'Lightning' : 'Bitcoin'} address.`);
@@ -576,6 +587,7 @@
             // Save to local storage for convenience next time
             localStorage.setItem('btc-tip-address', address);
             localStorage.setItem('btc-tip-type', type);
+            localStorage.setItem('btc-tip-badge-style', badgeStyle);
 
             // Generate Widget Code
             const widgetCode = generateWidgetCode(address, type);
@@ -623,9 +635,14 @@
             const badgeLogo = isLightning ? 'lightning' : 'bitcoin';
             const badgeColor = isLightning ? '792EE5' : 'F7931A';
             
-            const markdownCode = `[![Tip Me](https://img.shields.io/badge/${badgeLabel}-${badgeColor}?style=for-the-badge&logo=${badgeLogo}&logoColor=white)](${protocol}:${address})`;
+            // GitHub blocks raw `bitcoin:` and `lightning:` URIs in markdown links for security.
+            // As a fallback, we link the badge to a web-based QR code generator API.
+            // When users click the badge, a large QR code opens in a new tab for them to scan.
+            const qrCodeUrl = `https://quickchart.io/qr?size=500&text=${protocol}:${address}`;
+            
+            const markdownCode = `[![Tip Me](https://img.shields.io/badge/${badgeLabel}-${badgeColor}?style=${badgeStyle}&logo=${badgeLogo}&logoColor=white)](${qrCodeUrl})`;
             document.getElementById('markdown-code').value = markdownCode;
-            document.getElementById('markdown-preview-img').src = `https://img.shields.io/badge/${badgeLabel}-${badgeColor}?style=for-the-badge&logo=${badgeLogo}&logoColor=white`;
+            document.getElementById('markdown-preview-img').src = `https://img.shields.io/badge/${badgeLabel}-${badgeColor}?style=${badgeStyle}&logo=${badgeLogo}&logoColor=white`;
 
             // Show results
             document.getElementById('results').style.display = 'block';
@@ -685,9 +702,14 @@
         window.onload = () => {
             const saved = localStorage.getItem('btc-tip-address');
             const savedType = localStorage.getItem('btc-tip-type');
+            const savedBadgeStyle = localStorage.getItem('btc-tip-badge-style');
+            
             if (savedType) {
                 document.getElementById('network-type').value = savedType;
                 updatePlaceholder();
+            }
+            if (savedBadgeStyle) {
+                document.getElementById('badge-style').value = savedBadgeStyle;
             }
             if (saved) {
                 document.getElementById('btc-address').value = saved;
