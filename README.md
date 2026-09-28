@@ -10,7 +10,7 @@ A beautiful, client-side, zero-dependency (using a CDN for QR codes) web applica
 - **Markdown Badge**: Generates a static GitHub-friendly Shields.io badge. GitHub strips raw `bitcoin:`/`lightning:` links, so the badge links to a [quickchart.io](https://quickchart.io) QR code of the payment URI.
 - **CLI**: `generate.js` produces the same snippets from the command line.
 - **Premium Design**: Dark mode interface, glassmorphism, smooth animations, and a modern aesthetic.
-- **Privacy**: The generator runs entirely in your browser and sends nothing anywhere. Note that visitors who click the Markdown badge send the address to quickchart.io to render the QR code, and the website widget loads its QR library from cdnjs.
+- **Privacy**: The generator runs entirely in your browser and sends nothing anywhere. Note that visitors who click the Markdown badge send the address to quickchart.io to render the QR code, and the website widget loads its QR library (pinned with an SRI hash) from jsDelivr.
 
 ## Getting Started
 
@@ -43,7 +43,7 @@ Paste the generated Markdown code into your GitHub profile `README.md` or any ot
 - HTML5
 - Vanilla CSS3 (Custom Properties, Flexbox, Animations)
 - Vanilla JavaScript
-- [qrcode.js](https://davidshimjs.github.io/qrcodejs/) (via CDN)
+- [qrcode-generator](https://github.com/kazuhikoarase/qrcode-generator) (via jsDelivr, pinned with SRI)
 - [Shields.io](https://shields.io/) (for static badges)
 
 ## License

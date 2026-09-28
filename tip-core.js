@@ -11,7 +11,10 @@
 }(typeof self !== 'undefined' ? self : this, function () {
     'use strict';
 
-    var QR_LIB_URL = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
+    // Pinned, maintained QR library (qrcode-generator, MIT) with Subresource Integrity.
+    // The hash is sha384 of dist/qrcode.js from the npm package; update both together.
+    var QR_LIB_URL = 'https://cdn.jsdelivr.net/npm/qrcode-generator@2.0.4/dist/qrcode.js';
+    var QR_LIB_SRI = 'sha384-e9EFD6BGC90bkW9aDV5xbbBfzwN7G8YImHao2lfLVKV/hPB0E0go+H3I64h7oHtA';
     var BADGE_STYLES = ['for-the-badge', 'flat', 'flat-square', 'plastic'];
     var TYPES = ['onchain', 'lightning'];
 
@@ -249,6 +252,7 @@
 '  var ADDRESS = ' + jsString(address) + ';\n' +
 '  var URI = ' + jsString(protocol + ':' + address) + ';\n' +
 '  var QR_URL = ' + jsString(QR_LIB_URL) + ';\n' +
+'  var QR_SRI = ' + jsString(QR_LIB_SRI) + ';\n' +
 '  var overlay = root.querySelector("[data-overlay]");\n' +
 '  var openBtn = root.querySelector("[data-open]");\n' +
 '  var closeBtn = root.querySelector("[data-close]");\n' +
@@ -257,27 +261,34 @@
 '  var qrDone = false;\n' +
 '\n' +
 '  function loadQr(cb) {\n' +
-'    if (window.QRCode) return cb();\n' +
+'    if (window.qrcode) return cb();\n' +
 '    var s = window.__btcQrScript;\n' +
 '    if (!s) {\n' +
 '      s = window.__btcQrScript = document.createElement("script");\n' +
 '      s.src = QR_URL;\n' +
+'      s.integrity = QR_SRI;\n' +
+'      s.crossOrigin = "anonymous";\n' +
 '      s.async = true;\n' +
 '      document.head.appendChild(s);\n' +
 '    }\n' +
 '    s.addEventListener("load", cb);\n' +
+'    s.addEventListener("error", function () {\n' +
+'      qrBox.textContent = "QR code unavailable - copy the address below.";\n' +
+'      qrBox.style.fontSize = "13px";\n' +
+'      qrBox.style.color = "#334155";\n' +
+'    });\n' +
 '  }\n' +
 '\n' +
 '  function drawQr() {\n' +
-'    if (qrDone || !window.QRCode) return;\n' +
-'    new QRCode(qrBox, {\n' +
-'      text: URI,\n' +
-'      width: ' + qrSize + ',\n' +
-'      height: ' + qrSize + ',\n' +
-'      colorDark: "#000000",\n' +
-'      colorLight: "#ffffff",\n' +
-'      correctLevel: QRCode.CorrectLevel.M\n' +
-'    });\n' +
+'    if (qrDone || !window.qrcode) return;\n' +
+'    var qr = window.qrcode(0, "M");\n' +
+'    qr.addData(URI);\n' +
+'    qr.make();\n' +
+'    qrBox.innerHTML = qr.createSvgTag({ cellSize: 4, margin: 0, scalable: true, alt: "QR code for " + URI });\n' +
+'    var svg = qrBox.firstChild;\n' +
+'    svg.setAttribute("width", "' + qrSize + '");\n' +
+'    svg.setAttribute("height", "' + qrSize + '");\n' +
+'    svg.style.display = "block";\n' +
 '    qrDone = true;\n' +
 '  }\n' +
 '\n' +
