@@ -1,0 +1,11 @@
+{
+  "name": "btc-tipper",
+  "version": "1.0.0",
+  "description": "Generate Bitcoin / Lightning tip widgets and Markdown badges",
+  "license": "MIT",
+  "bin": { "btc-tipper": "generate.js" },
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  },
+  "engines": { "node": ">=18" }
+}

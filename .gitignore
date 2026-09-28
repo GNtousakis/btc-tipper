@@ -11,3 +11,8 @@ Thumbs.db
 .idea/
 .vscode/
 *.swp
+
+# CLI output
+widget.html
+badge.md
+node_modules/

@@ -7,9 +7,10 @@ A beautiful, client-side, zero-dependency (using a CDN for QR codes) web applica
 ## Features
 
 - **Website Widget**: Generates an interactive, beautiful HTML/JS button and modal that you can embed on any personal website. Uses a lightweight CDN for QR code generation.
-- **Markdown Badge**: Generates a static GitHub-friendly Shields.io badge that directly opens a `bitcoin:<address>` URI on click.
+- **Markdown Badge**: Generates a static GitHub-friendly Shields.io badge. GitHub strips raw `bitcoin:`/`lightning:` links, so the badge links to a [quickchart.io](https://quickchart.io) QR code of the payment URI.
+- **CLI**: `generate.js` produces the same snippets from the command line.
 - **Premium Design**: Dark mode interface, glassmorphism, smooth animations, and a modern aesthetic.
-- **Privacy First**: Fully client-side. Your Bitcoin address is never sent to any server.
+- **Privacy**: The generator runs entirely in your browser and sends nothing anywhere. Note that visitors who click the Markdown badge send the address to quickchart.io to render the QR code, and the website widget loads its QR library from cdnjs.
 
 ## Getting Started
 
@@ -23,8 +24,20 @@ A beautiful, client-side, zero-dependency (using a CDN for QR codes) web applica
 ### The Website Widget
 Embed the generated HTML code directly into your website's body. The widget includes scoped CSS and minimal Vanilla JS. It will render a beautiful "Tip Me in Bitcoin" button. When visitors click it, they will see a modal with your generated QR code and address.
 
+### The CLI
+```
+node generate.js <address> [onchain|lightning] [for-the-badge|flat|flat-square|plastic] [--out <dir>] [--qr-size <px>] [--force]
+```
+Writes `widget.html` and `badge.md` (refuses to overwrite unless `--force`). The address is validated before anything is generated. Run the tests with `npm test`.
+
 ### The Markdown Badge
 Paste the generated Markdown code into your GitHub profile `README.md` or any other Markdown-supported platform where JavaScript is restricted.
+
+## Project layout
+- `tip-core.js` – shared validation, escaping and snippet generation (used by both the page and the CLI)
+- `index.html` – the generator UI
+- `generate.js` – CLI
+- `test/` – unit tests
 
 ## Technologies Used
 - HTML5
